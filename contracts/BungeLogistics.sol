@@ -43,7 +43,7 @@ contract BungeLogistics {
         Product product;
         Location origin;
         Location destination;
-        Route[] route;
+        mapping (uint256 => Route) routeMap;        
         uint256 routeCount;
         uint256 creationTimestamp;
         uint256 lastUpdateTimestamp;
@@ -62,8 +62,6 @@ contract BungeLogistics {
     uint256 logisticLinesCount;
 
     Route[] routes;
-    
-
     uint256 routesCount;
 
     mapping (string => uint256) LocationNameIndex;
@@ -74,12 +72,6 @@ contract BungeLogistics {
 
     constructor() {
         console.log("We have been constructed!");
-    }
-
-    function addRoute () public {
-        Route memory route = Route(locations[0],block.timestamp);
-        routes.push(route);
-        
     }
 
     // Product functions
@@ -164,12 +156,22 @@ contract BungeLogistics {
 
     // LogisticLine functions
 
-    function addLogisticLine (string memory name, uint256 productIndex, uint256 originIndex, uint256 destinationIndex) public {
-        Route[] memory _routes = routes; 
+    function addLogisticLine (uint256 productIndex, uint256 originIndex, uint256 destinationIndex) public {
+        LogisticLine storage p = logisticLines[logisticLinesCount];
 
-        logisticLines.push(LogisticLine(logisticLinesCount, products[productIndex], locations[originIndex], locations[destinationIndex], _routes, 0, block.timestamp, 0, 0));
+        p.routeMap[p.routeCount] = Route(locations[originIndex], 0);
+        p.id = logisticLines.length - 1;
+        p.product = products[productIndex];
+        p.origin = locations[originIndex];
+        p.destination = locations[destinationIndex];
+        p.creationTimestamp = block.timestamp;
+        p.lastUpdateTimestamp = block.timestamp;
+        p.completedTimestamp = 0;
+        p.routeCount = 1;
+
         LogisticLineIDIndex[logisticLinesCount] = logisticLinesCount;
         logisticLinesCount++;
+ 
     }
 
     function deleteLogisticLine (uint256 id) public {
@@ -178,12 +180,10 @@ contract BungeLogistics {
         logisticLinesCount--;
     }
 
-    function getLogisticLine (uint256 id) public view returns (LogisticLine memory) {
-        return logisticLines[LogisticLineIDIndex[id]];
+    function getLogisticLine (uint256 id) internal view returns (LogisticLine storage) {
+        return logisticLines[id];
     }
 
-    function getAllLogisticLines () public view returns (LogisticLine[] memory) {
-        return logisticLines;
-    }
+
 
 }
